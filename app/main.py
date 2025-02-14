@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.routes import auth  # Import your routes
 # from app.database import sync_engine as engine  # Ensure you're using the correct engine
-from app.database import Base  # Import Base once
+# from app.database import Base  # Import Base once
 
 app = FastAPI(title="Hospital Management System API")
 
