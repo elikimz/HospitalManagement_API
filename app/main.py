@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.database import engine, Base
-from app.routes import users, patients, appointments  # Import your routes
+from .database import engine, Base
+from .routes import users, patients, appointments  # Import your routes
 
 # Create database tables (if not using Alembic)
 Base.metadata.create_all(bind=engine)
