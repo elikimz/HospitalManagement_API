@@ -57,17 +57,22 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", response_model=UserResponse)
 async def register_user(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
-    stmt = select(User).where(User.email == user_data.email)
-    result = await db.execute(stmt)
-    existing_user = result.scalars().first()
-    if existing_user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-    hashed_password = get_password_hash(user_data.password)
-    new_user = User(username=user_data.username, email=user_data.email, password_hash=hashed_password, role=user_data.role)
-    db.add(new_user)
-    await db.commit()
-    await db.refresh(new_user)
+    async with db.begin():  # Ensure transactions are managed
+        stmt = select(User).where(User.email == user_data.email)
+        result = await db.execute(stmt)
+        existing_user = result.scalars().first()
+
+        if existing_user:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+
+        hashed_password = get_password_hash(user_data.password)
+        new_user = User(username=user_data.username, email=user_data.email, password_hash=hashed_password, role=user_data.role)
+        db.add(new_user)
+        await db.commit()
+        await db.refresh(new_user)
+
     return new_user
+
 
 @router.post("/login", response_model=Token)
 async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
